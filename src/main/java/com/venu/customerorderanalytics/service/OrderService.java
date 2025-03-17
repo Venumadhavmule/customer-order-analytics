@@ -85,6 +85,7 @@ public class OrderService {
 				|| currentStatus == OrderStatus.SHIPPED && newStatus == OrderStatus.DELIVERED) {
 
 			order.setStatus(newStatus);
+			order.setDeliveryDate(LocalDate.now());
 			orderRepository.save(order);
 		} else {
 			throw new RuntimeException("Invalid status transition");

@@ -5,6 +5,7 @@ import java.time.LocalDate;
 
 import com.venu.customerorderanalytics.constant.OrderStatus;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -28,6 +29,8 @@ public class Orders {
 	private Long id;
 
 	private LocalDate orderDate;
+	
+	@Column(nullable = true, updatable = true)
 	private LocalDate deliveryDate;
 
 	@Enumerated(EnumType.STRING)
