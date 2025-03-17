@@ -16,16 +16,16 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Customer {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    
-    @Column(nullable = false)
-    private String name;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-    @Column(nullable = false, unique = true)
-    private String email;
+	@Column(nullable = false)
+	private String name;
 
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+	@Column(nullable = false, unique = true)
+	private String email;
+
+	@Column(nullable = false, updatable = false)
+	private LocalDateTime createdAt = LocalDateTime.now();
 }

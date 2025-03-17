@@ -1,8 +1,7 @@
 package com.venu.customerorderanalytics.controller;
 
-import java.time.LocalDateTime;
+import java.util.List;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,11 +11,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.venu.customerorderanalytics.constant.OrderStatus;
-import com.venu.customerorderanalytics.dao.Customer;
 import com.venu.customerorderanalytics.dao.Orders;
-import com.venu.customerorderanalytics.repository.CustomerRepository;
-import com.venu.customerorderanalytics.repository.OrderRepository;
+import com.venu.customerorderanalytics.dto.OrderRequest;
+import com.venu.customerorderanalytics.service.OrderService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -24,35 +21,27 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/orders")
 @RequiredArgsConstructor
 public class OrderController {
-    private final OrderRepository orderRepository;
-    private final CustomerRepository customerRepository;
 
-    @PostMapping
-    public ResponseEntity<Orders> placeOrder(@RequestBody OrderRequest request) {
-        Customer customer = customerRepository.findById(request.getCustomerId())
-            .orElseThrow(() -> new RuntimeException("Customer not found"));
+	private final OrderService orderService;
 
-        Orders order = new Orders(null, customer, LocalDateTime.now(), OrderStatus.PENDING, request.getTotalAmount());
-        return ResponseEntity.ok(orderRepository.save(order));
-    }
+	@PostMapping
+	public ResponseEntity<Orders> placeOrder(@RequestBody OrderRequest orderRequest) {
+		return ResponseEntity.ok(orderService.placeOrder(orderRequest));
+	}
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Orders> getOrder(@PathVariable Long id) {
-        return ResponseEntity.ok(orderRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Order not found")));
-    }
+	@GetMapping
+	public ResponseEntity<List<Orders>> getAllOrders() {
+		return ResponseEntity.ok(orderService.getAllOrders());
+	}
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> cancelOrder(@PathVariable Long id) {
-        Orders order = orderRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Order not found"));
+	@GetMapping("/{id}")
+	public ResponseEntity<Orders> getOrderById(@PathVariable Long id) {
+		return ResponseEntity.ok(orderService.getOrderById(id));
+	}
 
-        if (order.getStatus() == OrderStatus.PENDING) {
-            order.setStatus(OrderStatus.CANCELED);
-            orderRepository.save(order);
-            return ResponseEntity.noContent().build();
-        } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
-    }
+	@DeleteMapping("/{id}")
+	public ResponseEntity<String> cancelOrder(@PathVariable Long id) {
+		orderService.cancelOrder(id);
+		return ResponseEntity.ok("Order canceled successfully");
+	}
 }
