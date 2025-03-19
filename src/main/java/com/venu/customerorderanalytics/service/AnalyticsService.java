@@ -59,60 +59,51 @@ public class AnalyticsService {
 	}
 
 	public List<Map<String, Object>> getMonthlyRetentionRate() {
-	    List<Object[]> results = orderRepository.getTotalCustomersPerMonth();
-	    
-	    List<Map<String, Object>> retentionData = new ArrayList<>();
-	    
-	    for (Object[] row : results) {
-	        Integer month = ((Number) row[0]).intValue();  // Cast to Integer
-	        Integer year = ((Number) row[1]).intValue();   // Cast to Integer
-	        Long totalCustomers = ((Number) row[2]).longValue();  // Cast to Long
+		List<Object[]> results = orderRepository.getTotalCustomersPerMonth();
 
-	        Map<String, Object> monthData = new HashMap<>();
-	        monthData.put("month", month);
-	        monthData.put("year", year);
-	        monthData.put("totalCustomers", totalCustomers);
+		List<Map<String, Object>> retentionData = new ArrayList<>();
 
-	        retentionData.add(monthData);
-	    }
-	    
-	    return retentionData;
+		for (Object[] row : results) {
+			Integer month = ((Number) row[0]).intValue();
+			Integer year = ((Number) row[1]).intValue();
+			Long totalCustomers = ((Number) row[2]).longValue();
+
+			Map<String, Object> monthData = new HashMap<>();
+			monthData.put("month", month);
+			monthData.put("year", year);
+			monthData.put("totalCustomers", totalCustomers);
+
+			retentionData.add(monthData);
+		}
+
+		return retentionData;
 	}
-
-
 
 	public List<Map<String, Object>> getLongestOrderProcessingTimes() {
-	    return orderRepository.findDeliveredOrders().stream()
-	        .filter(order -> order.getOrderDate() != null && order.getDeliveryDate() != null)  // Ensure no null dates
-	        .sorted(Comparator.comparingLong(order -> 
-	            -ChronoUnit.DAYS.between(order.getOrderDate(), order.getDeliveryDate())  // Sort in descending order
-	        ))
-	        .limit(5)
-	        .map(order -> {
-	            Map<String, Object> result = new HashMap<>();
-	            result.put("Order ID", order.getId());
-	            result.put("Order Date", order.getOrderDate());
-	            result.put("Delivery Date", order.getDeliveryDate());
-	            result.put("Processing Time (Days)", 
-	                ChronoUnit.DAYS.between(order.getOrderDate(), order.getDeliveryDate())
-	            );
-	            
-	            log.info("Longest Longest Order Processing: {}",result.toString());
-	            return result;
-	        })
-	        .collect(Collectors.toList());
-	}
+		return orderRepository.findDeliveredOrders().stream()
+				.filter(order -> order.getOrderDate() != null && order.getDeliveryDate() != null)
 
+				.sorted(Comparator.comparingLong(
+						order -> -ChronoUnit.DAYS.between(order.getOrderDate(), order.getDeliveryDate())))
+				.limit(5).map(order -> {
+					Map<String, Object> result = new HashMap<>();
+					result.put("Order ID", order.getId());
+					result.put("Order Date", order.getOrderDate());
+					result.put("Delivery Date", order.getDeliveryDate());
+					result.put("Processing Time (Days)",
+							ChronoUnit.DAYS.between(order.getOrderDate(), order.getDeliveryDate()));
+
+					log.info("Longest Longest Order Processing: {}", result.toString());
+					return result;
+				}).collect(Collectors.toList());
+	}
 
 	public Map<String, Double> getAverageOrderValueByCategory() {
-	    List<Object[]> results = orderItemRepository.getAverageOrderValueByCategory();  // Fetch query results
+		List<Object[]> results = orderItemRepository.getAverageOrderValueByCategory();
 
-	    return results.stream().collect(Collectors.toMap(
-	        row -> (String) row[0],
-	        row -> ((Number) row[1]).doubleValue()
-	    ));
+		return results.stream()
+				.collect(Collectors.toMap(row -> (String) row[0], row -> ((Number) row[1]).doubleValue()));
 	}
-
 
 	public Map<String, Double> getSeasonalRevenue() {
 		List<Object[]> revenueByMonth = orderRepository.getRevenuePerMonth();
@@ -149,5 +140,28 @@ public class AnalyticsService {
 		});
 
 		return distribution;
+	}
+
+	public Map<String, Integer> getMostCommonOrderSizes() {
+		List<Object[]> orderData = orderRepository.getOrderItemCounts();
+
+		Map<String, Integer> orderSizeCounts = new HashMap<>();
+		orderSizeCounts.put("Small", 0);
+		orderSizeCounts.put("Medium", 0);
+		orderSizeCounts.put("Large", 0);
+
+		for (Object[] row : orderData) {
+			int totalItems = ((Number) row[1]).intValue();
+
+			if (totalItems >= 1 && totalItems <= 2) {
+				orderSizeCounts.put("Small", orderSizeCounts.get("Small") + 1);
+			} else if (totalItems >= 3 && totalItems <= 5) {
+				orderSizeCounts.put("Medium", orderSizeCounts.get("Medium") + 1);
+			} else {
+				orderSizeCounts.put("Large", orderSizeCounts.get("Large") + 1);
+			}
+		}
+
+		return orderSizeCounts;
 	}
 }

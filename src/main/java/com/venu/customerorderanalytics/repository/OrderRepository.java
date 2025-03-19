@@ -42,4 +42,15 @@ public interface OrderRepository extends JpaRepository<Orders, Long> {
 	Long getReturningCustomers(@Param("currentMonth") int currentMonth, @Param("currentYear") int currentYear,
 			@Param("previousMonth") int previousMonth, @Param("previousYear") int previousYear);
 
+	@Query(value = "SELECT MONTH(o.order_date) AS month, " + "YEAR(o.order_date) AS year, "
+			+ "COUNT(DISTINCT o.customer_id) AS total_customers, "
+			+ "GROUP_CONCAT(DISTINCT c.name ORDER BY c.name SEPARATOR ', ') AS customer_names " + "FROM orders o "
+			+ "JOIN customer c ON o.customer_id = c.id " + "GROUP BY YEAR(o.order_date), MONTH(o.order_date) "
+			+ "ORDER BY YEAR(o.order_date), MONTH(o.order_date)", nativeQuery = true)
+	List<Object[]> getTotalCustomersPerMonthWithNames();
+
+	@Query(value = "SELECT o.id AS order_id, SUM(oi.quantity) AS total_items " + "FROM orders o "
+			+ "JOIN order_items oi ON o.id = oi.order_id " + "GROUP BY o.id", nativeQuery = true)
+	List<Object[]> getOrderItemCounts();
+
 }

@@ -21,15 +21,12 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/admin")
 @RequiredArgsConstructor
-
 public class AdminController {
 	
     private final OrderRepository orderRepository;
     
     private final OrderService orderService;
    
-   
-
     @GetMapping("/orders")
     public ResponseEntity<List<Orders>> getAllOrders() {
         return ResponseEntity.ok(orderRepository.findAll());
