@@ -15,8 +15,11 @@ import com.venu.customerorderanalytics.dao.Orders;
 import com.venu.customerorderanalytics.repository.CustomerRepository;
 import com.venu.customerorderanalytics.service.OrderService;
 
+import lombok.extern.slf4j.Slf4j;
+
 @RestController
 @RequestMapping("/customers")
+@Slf4j
 public class CustomerController {
 
 	private final CustomerRepository customerRepository;
@@ -35,7 +38,8 @@ public class CustomerController {
 
 	@GetMapping("/{customerId}/orders")
 	public ResponseEntity<List<Orders>> getCustomerOrders(@PathVariable Long customerId) {
-		List<Orders> orders = orderService.getOrdersByCustomerId(customerId);
+		List<Orders> orders = orderService.getAllOrdersOfCustomer(customerId);
+		log.info("Orders of customer:{} are: {}",customerId,orders);
 		return ResponseEntity.ok(orders);
 	}
 }
