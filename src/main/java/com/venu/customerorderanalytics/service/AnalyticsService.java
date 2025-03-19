@@ -59,27 +59,26 @@ public class AnalyticsService {
 	}
 
 	public List<Map<String, Object>> getMonthlyRetentionRate() {
-	    List<Object[]> results = orderRepository.getTotalCustomersPerMonthWithNames();
+	    List<Object[]> results = orderRepository.getTotalCustomersPerMonth();
 	    
 	    List<Map<String, Object>> retentionData = new ArrayList<>();
 	    
 	    for (Object[] row : results) {
-	        Integer month = ((Number) row[0]).intValue();  
-	        Integer year = ((Number) row[1]).intValue();   
-	        Long totalCustomers = ((Number) row[2]).longValue();  
-	        String customerNames = (String) row[3];  
+	        Integer month = ((Number) row[0]).intValue();  // Cast to Integer
+	        Integer year = ((Number) row[1]).intValue();   // Cast to Integer
+	        Long totalCustomers = ((Number) row[2]).longValue();  // Cast to Long
 
 	        Map<String, Object> monthData = new HashMap<>();
 	        monthData.put("month", month);
 	        monthData.put("year", year);
 	        monthData.put("totalCustomers", totalCustomers);
-	        monthData.put("customerNames", customerNames != null ? customerNames : "No customers");
 
 	        retentionData.add(monthData);
 	    }
 	    
 	    return retentionData;
 	}
+
 
 
 	public List<Map<String, Object>> getLongestOrderProcessingTimes() {
