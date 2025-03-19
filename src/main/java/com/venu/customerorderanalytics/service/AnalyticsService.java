@@ -5,6 +5,8 @@ import com.venu.customerorderanalytics.repository.CustomerRepository;
 import com.venu.customerorderanalytics.repository.OrderItemRepository;
 import com.venu.customerorderanalytics.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -15,6 +17,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AnalyticsService {
 
 	private final OrderRepository orderRepository;
@@ -76,25 +79,37 @@ public class AnalyticsService {
 	}
 
 	public List<Map<String, Object>> getLongestOrderProcessingTimes() {
-		return orderRepository.findDeliveredOrders().stream()
-				.filter(order -> order.getOrderDate() != null && order.getDeliveryDate() != null)
-				.sorted(Comparator
-						.comparingLong(order -> ChronoUnit.DAYS.between(order.getOrderDate(), order.getDeliveryDate())))
-				.limit(5).map(order -> {
-					Map<String, Object> result = new HashMap<>();
-					result.put("Order ID", order.getId());
-					result.put("Order Date", order.getOrderDate());
-					result.put("Delivery Date", order.getDeliveryDate());
-					result.put("Processing Time (Days)",
-							ChronoUnit.DAYS.between(order.getOrderDate(), order.getDeliveryDate()));
-					return result;
-				}).collect(Collectors.toList());
+	    return orderRepository.findDeliveredOrders().stream()
+	        .filter(order -> order.getOrderDate() != null && order.getDeliveryDate() != null)  // Ensure no null dates
+	        .sorted(Comparator.comparingLong(order -> 
+	            -ChronoUnit.DAYS.between(order.getOrderDate(), order.getDeliveryDate())  // Sort in descending order
+	        ))
+	        .limit(5)
+	        .map(order -> {
+	            Map<String, Object> result = new HashMap<>();
+	            result.put("Order ID", order.getId());
+	            result.put("Order Date", order.getOrderDate());
+	            result.put("Delivery Date", order.getDeliveryDate());
+	            result.put("Processing Time (Days)", 
+	                ChronoUnit.DAYS.between(order.getOrderDate(), order.getDeliveryDate())
+	            );
+	            
+	            log.info("Longest Longest Order Processing: {}",result.toString());
+	            return result;
+	        })
+	        .collect(Collectors.toList());
 	}
 
+
 	public Map<String, Double> getAverageOrderValueByCategory() {
-		return orderItemRepository.getOrderValuePerCategory().stream().collect(
-				Collectors.toMap(row -> (String) row[0], row -> ((BigDecimal) row[1]).doubleValue() / ((Long) row[2])));
+	    List<Object[]> results = orderItemRepository.getAverageOrderValueByCategory();  // Fetch query results
+
+	    return results.stream().collect(Collectors.toMap(
+	        row -> (String) row[0],
+	        row -> ((Number) row[1]).doubleValue()
+	    ));
 	}
+
 
 	public Map<String, Double> getSeasonalRevenue() {
 		List<Object[]> revenueByMonth = orderRepository.getRevenuePerMonth();
