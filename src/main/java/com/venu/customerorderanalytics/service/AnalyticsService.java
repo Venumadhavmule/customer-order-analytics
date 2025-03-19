@@ -3,7 +3,6 @@ package com.venu.customerorderanalytics.service;
 import java.math.BigDecimal;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -99,7 +98,7 @@ public class AnalyticsService {
 	}
 
 	public Map<String, Double> getAverageOrderValueByCategory() {
-		List<Object[]> results = orderItemRepository.getAverageOrderValueByCategory();
+		List<Object[]> results = orderItemRepository.getOrderValuePerCategory();
 
 		return results.stream()
 				.collect(Collectors.toMap(row -> (String) row[0], row -> ((Number) row[1]).doubleValue()));
@@ -126,20 +125,6 @@ public class AnalyticsService {
 		if (month >= 9 && month <= 11)
 			return "Fall";
 		return "Winter";
-	}
-
-	public Map<String, Integer> getOrderSizeDistribution() {
-		List<Object[]> orderSizes = orderItemRepository.getOrderCategoryCounts();
-		Map<String, Integer> distribution = new HashMap<>();
-
-		orderSizes.forEach(row -> {
-			int itemCount = (int) row[0];
-			int count = ((Long) row[1]).intValue();
-			String category = itemCount <= 2 ? "Small" : itemCount <= 5 ? "Medium" : "Large";
-			distribution.put(category, distribution.getOrDefault(category, 0) + count);
-		});
-
-		return distribution;
 	}
 
 	public Map<String, Integer> getMostCommonOrderSizes() {

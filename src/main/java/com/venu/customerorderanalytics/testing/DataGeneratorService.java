@@ -61,9 +61,11 @@ public class DataGeneratorService {
 		for (int i = 0; i < count; i++) {
 			Customer customer = customers.get(random.nextInt(customers.size()));
 			LocalDate orderDate = generateRandomDate();
-			LocalDate deliveryDate = orderDate.plusDays(random.nextInt(10) + 1);
 
-			OrderStatus status = OrderStatus.valueOf(getRandomStatus());
+			OrderStatus status = getRandomStatus();
+
+			LocalDate deliveryDate = (status == OrderStatus.DELIVERED) ? orderDate.plusDays(random.nextInt(10) + 1)
+					: null;
 
 			BigDecimal totalAmount = new BigDecimal(faker.commerce().price(10.0, 500.0));
 
@@ -81,6 +83,7 @@ public class DataGeneratorService {
 		for (Orders order : orders) {
 			int itemCount = random.nextInt(9) + 2;
 			for (int j = 0; j < itemCount; j++) {
+				
 				OrderItem item = new OrderItem(CATEGORIES.get(random.nextInt(CATEGORIES.size())),
 						new BigDecimal(faker.commerce().price(5.0, 200.0)), random.nextInt(5) + 1, order);
 				orderItems.add(item);
@@ -94,8 +97,11 @@ public class DataGeneratorService {
 		return LocalDate.now().minusDays(random.nextInt(365));
 	}
 
-	private String getRandomStatus() {
-		List<String> statuses = Arrays.asList("PENDING", "SHIPPED", "DELIVERED", "CANCELED");
+	private OrderStatus getRandomStatus() {
+		
+		List<OrderStatus> statuses = Arrays.asList(OrderStatus.PENDING, OrderStatus.SHIPPED, OrderStatus.DELIVERED,
+				OrderStatus.CANCELED);
+		
 		return statuses.get(random.nextInt(statuses.size()));
-	}
+	} 
 }

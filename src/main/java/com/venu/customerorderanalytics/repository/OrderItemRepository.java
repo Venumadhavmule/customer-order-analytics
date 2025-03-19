@@ -16,8 +16,4 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
 
 	@Query("SELECT oi.category, COUNT(oi) FROM OrderItem oi GROUP BY oi.category")
 	List<Object[]> getOrderCategoryCounts();
-
-	@Query("SELECT oi.category, SUM(oi.price * oi.quantity) FROM OrderItem oi GROUP BY oi.category")
-	List<Object[]> getAverageOrderValueByCategory();
-
 }
