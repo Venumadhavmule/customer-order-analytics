@@ -1,6 +1,7 @@
 package com.venu.customerorderanalytics.dao;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -16,6 +17,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Customer {
+	public Customer(String name, String email, LocalDateTime createdAt) {
+		this.name = name;
+		this.email = email;
+		this.createdAt = createdAt;
+	}
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;

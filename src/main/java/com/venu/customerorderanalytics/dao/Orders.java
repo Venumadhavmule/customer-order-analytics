@@ -52,4 +52,12 @@ public class Orders {
 		this.customer = customer;
 		this.totalAmount = totalAmount;
 	}
+	
+	public Orders(Customer customer, LocalDate orderDate, LocalDate deliveryDate, OrderStatus status, BigDecimal totalAmount) {
+	    this.customer = customer;
+	    this.orderDate = orderDate;
+	    this.deliveryDate = deliveryDate;
+	    this.status = status;
+	    this.totalAmount = totalAmount;
+	}
 }
