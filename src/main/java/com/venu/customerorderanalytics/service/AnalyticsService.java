@@ -1,19 +1,24 @@
 package com.venu.customerorderanalytics.service;
 
+import java.math.BigDecimal;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+
 import com.venu.customerorderanalytics.dao.Customer;
 import com.venu.customerorderanalytics.repository.CustomerRepository;
 import com.venu.customerorderanalytics.repository.OrderItemRepository;
 import com.venu.customerorderanalytics.repository.OrderRepository;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import org.springframework.stereotype.Service;
-
-import java.math.BigDecimal;
-import java.time.Month;
-import java.time.temporal.ChronoUnit;
-import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -54,29 +59,28 @@ public class AnalyticsService {
 	}
 
 	public List<Map<String, Object>> getMonthlyRetentionRate() {
-		List<Object[]> customerOrdersByMonth = orderRepository.getDistinctCustomersPerMonth();
-		Map<Integer, Set<Long>> customersPerMonth = new HashMap<>();
+	    List<Object[]> results = orderRepository.getTotalCustomersPerMonthWithNames();
+	    
+	    List<Map<String, Object>> retentionData = new ArrayList<>();
+	    
+	    for (Object[] row : results) {
+	        Integer month = ((Number) row[0]).intValue();  
+	        Integer year = ((Number) row[1]).intValue();   
+	        Long totalCustomers = ((Number) row[2]).longValue();  
+	        String customerNames = (String) row[3];  
 
-		customerOrdersByMonth.forEach(
-				row -> customersPerMonth.computeIfAbsent((int) row[0], k -> new HashSet<>()).add((long) row[1]));
+	        Map<String, Object> monthData = new HashMap<>();
+	        monthData.put("month", month);
+	        monthData.put("year", year);
+	        monthData.put("totalCustomers", totalCustomers);
+	        monthData.put("customerNames", customerNames != null ? customerNames : "No customers");
 
-		List<Map<String, Object>> retentionRates = new ArrayList<>();
-		for (int month = 1; month <= 12; month++) {
-			Set<Long> currentMonthCustomers = customersPerMonth.getOrDefault(month, new HashSet<>());
-			Set<Long> previousMonthCustomers = customersPerMonth.getOrDefault(month - 1, new HashSet<>());
-			int returningCustomers = (int) currentMonthCustomers.stream().filter(previousMonthCustomers::contains)
-					.count();
-
-			Map<String, Object> result = new HashMap<>();
-			result.put("Month", Month.of(month));
-			result.put("Returning Customers", returningCustomers);
-			result.put("Total Customers", currentMonthCustomers.size());
-			result.put("Retention Rate (%)",
-					currentMonthCustomers.isEmpty() ? 0 : (returningCustomers * 100.0 / currentMonthCustomers.size()));
-			retentionRates.add(result);
-		}
-		return retentionRates;
+	        retentionData.add(monthData);
+	    }
+	    
+	    return retentionData;
 	}
+
 
 	public List<Map<String, Object>> getLongestOrderProcessingTimes() {
 	    return orderRepository.findDeliveredOrders().stream()
