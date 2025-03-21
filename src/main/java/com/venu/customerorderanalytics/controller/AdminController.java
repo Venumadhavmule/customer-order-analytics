@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.venu.customerorderanalytics.dao.Orders;
 import com.venu.customerorderanalytics.dto.OrderStatusUpdateRequest;
-import com.venu.customerorderanalytics.repository.OrderRepository;
 import com.venu.customerorderanalytics.service.OrderService;
 
 import lombok.RequiredArgsConstructor;
@@ -23,13 +22,11 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AdminController {
 	
-    private final OrderRepository orderRepository;
-    
     private final OrderService orderService;
    
     @GetMapping("/orders")
     public ResponseEntity<List<Orders>> getAllOrders() {
-        return ResponseEntity.ok(orderRepository.findAll());
+        return ResponseEntity.ok(orderService.getAllOrders());
     }
 
     @PutMapping("/orders/{id}/status")
