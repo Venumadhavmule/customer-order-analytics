@@ -11,9 +11,8 @@ import com.venu.customerorderanalytics.dao.OrderItem;
 @Repository
 public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
 
-	@Query("SELECT oi.category, SUM(oi.price * oi.quantity) FROM OrderItem oi GROUP BY oi.category")
-	List<Object[]> getOrderValuePerCategory();
+	@Query("SELECT oi.category, SUM(oi.price * oi.quantity) / COUNT(DISTINCT oi.order.id) "
+			+ "FROM OrderItem oi GROUP BY oi.category")
+	List<Object[]> getAverageOrderValuePerCategory();
 
-	@Query("SELECT oi.category, COUNT(oi) FROM OrderItem oi GROUP BY oi.category")
-	List<Object[]> getOrderCategoryCounts();
 }

@@ -5,6 +5,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -60,19 +61,45 @@ public class AnalyticsService {
 	public List<Map<String, Object>> getMonthlyRetentionRate() {
 		List<Object[]> results = orderRepository.getTotalCustomersPerMonth();
 
-		List<Map<String, Object>> retentionData = new ArrayList<>();
+		Map<String, Long> monthlyCustomers = new LinkedHashMap<>();
 
 		for (Object[] row : results) {
 			Integer month = ((Number) row[0]).intValue();
 			Integer year = ((Number) row[1]).intValue();
 			Long totalCustomers = ((Number) row[2]).longValue();
 
+			String monthKey = year + "-" + String.format("%02d", month);
+			monthlyCustomers.put(monthKey, totalCustomers);
+		}
+
+		List<Map<String, Object>> retentionData = new ArrayList<>();
+		String prevMonthKey = null;
+		Long prevTotalCustomers = null;
+
+		for (Map.Entry<String, Long> entry : monthlyCustomers.entrySet()) {
+			String monthKey = entry.getKey();
+			Long totalCustomers = entry.getValue();
+			Long returningCustomers = 0L;
+			Double retentionRate = 0.0;
+
+			if (prevMonthKey != null) {
+				returningCustomers = orderRepository.getReturningCustomersBetweenMonths(prevMonthKey, monthKey);
+
+				if (prevTotalCustomers != null && prevTotalCustomers > 0) {
+					retentionRate = (returningCustomers * 100.0) / prevTotalCustomers;
+				}
+			}
+
 			Map<String, Object> monthData = new HashMap<>();
-			monthData.put("month", month);
-			monthData.put("year", year);
+			monthData.put("month", monthKey);
 			monthData.put("totalCustomers", totalCustomers);
+			monthData.put("returningCustomers", returningCustomers);
+			monthData.put("retentionRate", retentionRate);
 
 			retentionData.add(monthData);
+
+			prevMonthKey = monthKey;
+			prevTotalCustomers = totalCustomers;
 		}
 
 		return retentionData;
@@ -98,7 +125,8 @@ public class AnalyticsService {
 	}
 
 	public Map<String, Double> getAverageOrderValueByCategory() {
-		List<Object[]> results = orderItemRepository.getOrderValuePerCategory();
+
+		List<Object[]> results = orderItemRepository.getAverageOrderValuePerCategory();
 
 		return results.stream()
 				.collect(Collectors.toMap(row -> (String) row[0], row -> ((Number) row[1]).doubleValue()));
@@ -108,11 +136,14 @@ public class AnalyticsService {
 		List<Object[]> revenueByMonth = orderRepository.getRevenuePerMonth();
 		Map<String, Double> seasonalRevenue = new HashMap<>();
 
-		revenueByMonth.forEach(row -> {
-			String season = getSeason((int) row[0]);
-			seasonalRevenue.put(season,
-					seasonalRevenue.getOrDefault(season, 0.0) + ((BigDecimal) row[1]).doubleValue());
-		});
+		for (Object[] row : revenueByMonth) {
+			int month = ((Number) row[0]).intValue();
+			double revenue = ((Number) row[1]).doubleValue();
+
+			String season = getSeason(month);
+
+			seasonalRevenue.put(season, seasonalRevenue.getOrDefault(season, 0.0) + revenue);
+		}
 
 		return seasonalRevenue;
 	}
