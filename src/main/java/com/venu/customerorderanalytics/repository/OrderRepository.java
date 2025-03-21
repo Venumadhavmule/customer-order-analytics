@@ -12,16 +12,16 @@ import com.venu.customerorderanalytics.dao.Orders;
 @Repository
 public interface OrderRepository extends JpaRepository<Orders, Long> {
 
-	@Query("SELECT o.customer.id, SUM(o.totalAmount) FROM Orders o GROUP BY o.customer.id")
+	@Query("SELECT o.customer.id, SUM(o.totalAmount) FROM Orders o WHERE status = 'DELIVERED' GROUP BY o.customer.id")
 	List<Object[]> getTotalRevenuePerCustomer();
 
-	@Query("SELECT o.customer.id, SUM(o.totalAmount) FROM Orders o WHERE o.status = 'REFUNDED' GROUP BY o.customer.id")
+	@Query("SELECT o.customer.id, SUM(o.totalAmount) FROM Orders o WHERE o.status = 'CANCELED' GROUP BY o.customer.id")
 	List<Object[]> getTotalRefundsPerCustomer();
 
 	@Query("SELECT o FROM Orders o WHERE o.status = 'DELIVERED'")
 	List<Orders> findDeliveredOrders();
 
-	@Query("SELECT MONTH(o.orderDate), SUM(o.totalAmount) FROM Orders o GROUP BY MONTH(o.orderDate)")
+	@Query("SELECT MONTH(o.orderDate), YEAR(o.orderDate), SUM(o.totalAmount) FROM Orders o GROUP BY YEAR(o.orderDate), MONTH(o.orderDate)")
 	List<Object[]> getRevenuePerMonth();
 
 	@Query("SELECT o FROM Orders o WHERE o.customer.id = :customerId")
@@ -35,5 +35,12 @@ public interface OrderRepository extends JpaRepository<Orders, Long> {
 	@Query(value = "SELECT o.id AS order_id, SUM(oi.quantity) AS total_items " + "FROM orders o "
 			+ "JOIN order_items oi ON o.id = oi.order_id " + "GROUP BY o.id", nativeQuery = true)
 	List<Object[]> getOrderItemCounts();
+
+	@Query(value = "SELECT COUNT(DISTINCT o1.customer_id) " + "FROM orders o1 "
+			+ "JOIN orders o2 ON o1.customer_id = o2.customer_id "
+			+ "WHERE CONCAT(YEAR(o1.order_date), '-', LPAD(MONTH(o1.order_date), 2, '0')) = :prevMonth "
+			+ "AND CONCAT(YEAR(o2.order_date), '-', LPAD(MONTH(o2.order_date), 2, '0')) = :currentMonth", nativeQuery = true)
+	Long getReturningCustomersBetweenMonths(@Param("prevMonth") String prevMonth,
+			@Param("currentMonth") String currentMonth);
 
 }
